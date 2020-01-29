@@ -1,8 +1,10 @@
-FROM nvidia/cuda:10.1-devel-ubuntu18.04
+FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
 MAINTAINER Roman Suvorov windj007@gmail.com
 
 RUN apt-get clean && apt-get update
+
+ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
 
 RUN apt-get install -yqq curl
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
@@ -13,7 +15,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev
                          cmake wget gfortran \
                          libatlas3-base libhdf5-dev libxml2-dev libxslt-dev \
                          zlib1g-dev pkg-config graphviz \
-                         locales nodejs libffi-dev liblapacke-dev libblas-dev liblapack-dev
+                         locales nodejs libffi-dev liblapacke-dev libblas-dev liblapack-dev \
+                         liblzma-dev vim
 
 ENV PYENV_ROOT /opt/.pyenv
 RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
@@ -24,7 +27,7 @@ RUN pyenv global 3.7.4
 RUN pip  install -U pip
 RUN python -m pip install -U cython
 
-RUN pip install tensorflow-gpu==1.14
+RUN pip install tensorflow==2.1.0
 RUN pip install torch==1.2.0
 
 RUN pip install git+https://github.com/rkern/line_profiler.git
