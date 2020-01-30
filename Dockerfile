@@ -21,6 +21,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev
 ENV PYENV_ROOT /opt/.pyenv
 RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
 ENV PATH /opt/.pyenv/shims:/opt/.pyenv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PYTHON_CONFIGURE_OPTS --enable-shared
 RUN pyenv install 3.7.4
 RUN pyenv global 3.7.4
 
@@ -29,6 +30,21 @@ RUN python -m pip install -U cython
 
 RUN pip install tensorflow==2.1.0
 RUN pip install torch==1.2.0
+
+# ===========================================================================================
+# Theano
+
+RUN wget -qO- https://github.com/Theano/libgpuarray/archive/v0.7.6.tar.gz | tar xz -C ~ && \
+	cd ~/libgpuarray* && mkdir -p build && cd build && \
+	cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local .. && \
+	make -j"$(nproc)" install && \
+	cd ~/libgpuarray* && \
+	python setup.py build && \
+	python setup.py install && \
+	printf '[global]\nfloatX = float32\ndevice = cuda0\n\n[dnn]\ninclude_path = /usr/local/cuda/targets/x86_64-linux/include\n' > ~/.theanorc
+RUN pip install https://github.com/Theano/Theano/archive/master.zip && \
+	ldconfig
+# ===========================================================================================
 
 RUN pip install git+https://github.com/rkern/line_profiler.git
 RUN python -m pip install  \
