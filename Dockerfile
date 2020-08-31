@@ -28,7 +28,7 @@ RUN pyenv global 3.7.4
 RUN pip  install -U pip
 RUN python -m pip install -U cython
 
-RUN pip install tensorflow==2.1.0
+RUN pip install tensorflow==2.3.0
 RUN pip install torch==1.2.0
 
 # ===========================================================================================
@@ -57,7 +57,6 @@ RUN pip install transformers allennlp grpcio \
         git+https://github.com/facebookresearch/fastText.git
 RUN pip install deeppavlov --no-deps
 RUN pip install -U pymystem3 # && python -c "import pymystem3 ; pymystem3.Mystem()"
-#RUN pip install pymorphy2[fast] pymorphy2-dicts-ru
 
 RUN python -m pip install -U \
         git+https://github.com/pybind/pybind11.git nmslib \
