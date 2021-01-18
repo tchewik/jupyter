@@ -2,12 +2,12 @@ FROM nvidia/cuda:10.1-cudnn7-devel-ubuntu18.04
 
 MAINTAINER Roman Suvorov windj007@gmail.com
 
-RUN apt-get clean && apt-get update
+RUN apt-get clean && apt update
 
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
 
 RUN apt-get install -yqq curl
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev \
                          libssl-dev libreadline-dev \
@@ -16,7 +16,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libbz2-dev
                          libatlas3-base libhdf5-dev libxml2-dev libxslt-dev \
                          zlib1g-dev pkg-config graphviz \
                          locales nodejs libffi-dev liblapacke-dev libblas-dev liblapack-dev \
-                         liblzma-dev vim
+                         liblzma-dev vim xvfb
 
 ENV PYENV_ROOT /opt/.pyenv
 RUN curl -L https://raw.githubusercontent.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
@@ -81,17 +81,6 @@ RUN jupyter contrib nbextension install --system && \
     jupyter labextension install @jupyterlab/toc && \
     jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
-RUN git clone --recursive https://github.com/Microsoft/LightGBM /tmp/lgbm && \
-    cd /tmp/lgbm && \
-    mkdir build && \
-    cd build && \
-    cmake .. && \
-    make && \
-    cd ../python-package && \
-    python setup.py install && \
-    cd /tmp && \
-    rm -r /tmp/lgbm
-
 RUN git clone https://code.googlesource.com/re2 /tmp/re2 && \
     cd /tmp/re2 && \
     make CFLAGS='-fPIC -c -Wall -Wno-sign-compare -O3 -g -I.' && \
@@ -121,4 +110,4 @@ COPY hashpwd.py /hashpwd.py
 ENV JUPYTER_CONFIG_DIR="/jupyter"
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD [ "jupyter", "notebook", "--ip=0.0.0.0", "--allow-root" ]
+CMD [ "xvfb-run", "--auto-servernum", "jupyter", "notebook", "--ip=0.0.0.0", "--allow-root" ]
