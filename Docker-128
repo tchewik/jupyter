@@ -1,0 +1,59 @@
+# For tchewik/jupyterlab:122 docker image
+
+FROM nvidia/cuda:12.8.1-devel-ubuntu22.04
+
+RUN apt clean && apt update
+RUN apt install -yqq curl
+
+RUN DEBIAN_FRONTEND=noninteractive apt install -y build-essential libbz2-dev \
+                         libssl-dev libreadline-dev \
+                         libsqlite3-dev tk-dev libpng-dev libfreetype6-dev git \
+                         cmake wget gfortran \
+                         libatlas3-base libhdf5-dev libxml2-dev libxslt-dev \
+                         zlib1g-dev pkg-config graphviz \
+                         locales nodejs libffi-dev liblapacke-dev libblas-dev liblapack-dev liblzma-dev
+
+ENV PATH="/opt/conda/bin:${PATH}"
+ARG PATH="/opt/conda/bin:${PATH}"
+RUN wget -nv https://repo.anaconda.com/miniconda/Miniconda3-py310_23.5.2-0-Linux-x86_64.sh -O miniconda.sh && \ 
+             bash miniconda.sh -b -p /opt/conda
+
+RUN conda install -c conda-forge jupyterlab
+
+RUN conda install pip wheel
+RUN python -m pip install -U cython
+
+# before the latest torch
+RUN pip install transformers
+RUN pip install allennlp
+
+RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126
+
+RUN pip install numpy scipy pandas gensim scikit-learn \
+           annoy ujson line_profiler tables sharedmem matplotlib \
+           xgboost joblib lxml h5py tqdm lightgbm lime \ 
+           scikit-image tensorboardX plotly graphviz seaborn
+
+RUN conda install ipykernel
+RUN pip install notebook
+
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+        dpkg-reconfigure --frontend=noninteractive locales
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+
+EXPOSE 8888
+VOLUME ["/notebook", "/jupyter/certs"]
+WORKDIR /notebook
+
+ADD test_scripts /test_scripts
+ADD jupyter /jupyter
+RUN chmod 777 /jupyter
+COPY entrypoint.sh /entrypoint.sh
+COPY hashpwd.py /hashpwd.py
+
+ENV JUPYTER_CONFIG_DIR="/jupyter"
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD [ "jupyter", "notebook", "--ip=0.0.0.0", "--allow-root" ]
